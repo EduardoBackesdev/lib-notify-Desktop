@@ -1,21 +1,18 @@
-use std::os::windows;
+use std::{fmt::Error, os::windows};
 
-use windows::{
-    core::*, Win32::Foundation::*, Win32::Graphics::Gdi::*,
-    Win32::System::LibraryLoader::GetModuleHandleA,
-    Win32::UI::WindowsAndMessaging::*,
-};
+use ::windows::{core::s, Win32::{Foundation::{HWND, LPARAM, LRESULT, WPARAM}, Graphics::Gdi::ValidateRect, System::LibraryLoader::GetModuleHandleA, UI::WindowsAndMessaging::{CreateWindowExA, DefWindowProcA, DispatchMessageA, GetMessageA, LoadCursorW, PostQuitMessage, RegisterClassA, CS_HREDRAW, CS_VREDRAW, CW_USEDEFAULT, IDC_ARROW, MSG, WINDOW_EX_STYLE, WNDCLASSA, WS_OVERLAPPEDWINDOW, WS_VISIBLE}}};
 
-pub fn simpleNotify()->Result<()>{
+
+pub fn simpleNotify()->Result<(), Box<dyn std::error::Error>>{
     unsafe {
         let instance = GetModuleHandleA(None)?;
-        debug_assert!(instance.0 != 0);
+        debug_assert!(instance.0 != std::ptr::null_mut());
 
         let window_class = s!("window");
 
         let wc = WNDCLASSA {
             hCursor: LoadCursorW(None, IDC_ARROW)?,
-            hInstance: instance,
+            hInstance: instance.into(),
             lpszClassName: window_class,
 
             style: CS_HREDRAW | CS_VREDRAW,
@@ -43,7 +40,7 @@ pub fn simpleNotify()->Result<()>{
 
         let mut message = MSG::default();
 
-        while GetMessageA(&mut message, HWND(0), 0, 0).into() {
+        while GetMessageA(&mut message, HWND(std::ptr::null_mut()), 0, 0).into() {
             DispatchMessageA(&message);
         }
 
